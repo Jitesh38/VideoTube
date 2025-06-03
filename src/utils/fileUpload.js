@@ -18,30 +18,22 @@ const uploadOnCloud = async (path) => {
                 console.log(error);
             });
         // console.log('File Uploaded successfully : ', uploadResult);
-        fs.unlinkSync(path); // * remove the locally save tamperory file . if upload fails
         return uploadResult.url;
     } catch (error) {
-        fs.unlinkSync(path); // * remove the locally save tamperory file . if upload fails
+        // fs.unlinkSync(path); // * remove the locally save tamperory file . if upload fails
         return null;
+    } finally {
+        fs.unlinkSync(path); // * remove the locally save tamperory file . if upload fails
     }
 };
 
-export { uploadOnCloud };
+// Delete previous image on cloud
+const deleteOnCloud = async (url) => {
+    let public_id = url.substring(
+        url.lastIndexOf("/") + 1,
+        url.lastIndexOf(".jpg")
+    );
+    await cloudinary.uploader.destroy(public_id);
+};
 
-// // Optimize delivery by resizing and applying auto-format and auto-quality
-// const optimizeUrl = cloudinary.url('shoes', {
-//     fetch_format: 'auto',
-//     quality: 'auto'
-// });
-
-// console.log(optimizeUrl);
-
-// // Transform the image: auto-crop to square aspect_ratio
-// const autoCropUrl = cloudinary.url('shoes', {
-//     crop: 'auto',
-//     gravity: 'auto',
-//     width: 500,
-//     height: 500,
-// });
-
-// console.log(autoCropUrl);
+export { uploadOnCloud, deleteOnCloud };
