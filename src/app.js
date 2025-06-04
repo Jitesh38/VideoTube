@@ -23,16 +23,27 @@ app.use(express.static("public"));
 // for cookies crud
 app.use(cookieParser());
 
-//routes
-import userRouter from "./routes/user.routes.js";
-import videoRouter from './routes/video.routes.js'
-
 //routes declaration
 
-// all routes for user 
+import userRouter from "./routes/user.routes.js";
 app.use("/api/users", userRouter);
 
-// all routes for videos
+import videoRouter from "./routes/video.routes.js";
 app.use("/api/videos", videoRouter);
+
+import tweetRouter from "./routes/tweet.routes.js";
+app.use("/api/tweet", tweetRouter);
+
+import subscriptionRouter from "./routes/subscription.routes.js";
+app.use("/api/subscription", subscriptionRouter);
+
+import playlistRouter from "./routes/playlist.routes.js";
+app.use("/api/playlist", playlistRouter);
+
+import likeRouter from "./routes/likes.routes.js";
+app.use("/api/like", likeRouter);
+
+import commentRouter from "./routes/comment.routes.js";
+app.use("/api/comment", commentRouter);
 
 export default app;

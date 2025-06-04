@@ -71,7 +71,7 @@ const getUploadedVideo = asyncHandler(async (req, res) => {
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
-    const {videoId} = req.params;
+    const { videoId } = req.params;
     const { title, description, isPublished } = req.body;
 
     // console.log(req);
@@ -108,7 +108,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
-    const {videoId} = req.params;
+    const { videoId } = req.params;
 
     const video = await Video.findByIdAndDelete(videoId);
 
@@ -121,7 +121,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200,video, "Video deleted successfully."));
+        .json(new ApiResponse(200, video, "Video deleted successfully."));
 });
 
-export { uploadVideo, getUploadedVideo, updateVideo , deleteVideo };
+export { uploadVideo, getUploadedVideo, updateVideo, deleteVideo };
