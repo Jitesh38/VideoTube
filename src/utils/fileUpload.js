@@ -18,7 +18,7 @@ const uploadOnCloud = async (path) => {
                 console.log(error);
             });
         // console.log('File Uploaded successfully : ', uploadResult);
-        return uploadResult.url;
+        return uploadResult;
     } catch (error) {
         // fs.unlinkSync(path); // * remove the locally save tamperory file . if upload fails
         return null;
@@ -31,9 +31,15 @@ const uploadOnCloud = async (path) => {
 const deleteOnCloud = async (url) => {
     let public_id = url.substring(
         url.lastIndexOf("/") + 1,
-        url.lastIndexOf(".jpg")
+        url.lastIndexOf(".jpg") && url.lastIndexOf(".png")  && url.lastIndexOf(".jpeg") && url.lastIndexOf(".mp4") && url.lastIndexOf(".JPG")
     );
-    await cloudinary.uploader.destroy(public_id);
+    console.log(public_id);
+
+    const response = await cloudinary.uploader.destroy(public_id);
+
+    console.log(response);
+
+    return response
 };
 
 export { uploadOnCloud, deleteOnCloud };

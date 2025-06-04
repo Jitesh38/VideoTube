@@ -43,6 +43,7 @@ const videoSchema = new mongoose.Schema(
 
 // ? plugin to use advance queries and pagination , read npm for more details
 
-Video.plugin(mongooseAggregatePaginate);
 
-const Video = mongoose.model("Video", videoSchema);
+export const Video = mongoose.model("Video", videoSchema);
+
+// Video.plugin(mongooseAggregatePaginate);

@@ -1,8 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
-import { deleteOnCloud, uploadOnCloud } from "../utils/fileUpload.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { User } from "../models/user.models.js";
+import { deleteOnCloud, uploadOnCloud } from "../utils/fileUpload.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
@@ -62,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.files?.avatar[0]?.path;
     const coverimageLocalPath = req.files?.coverImage[0]?.path;
 
-    console.log("Localpath of avatar ::", avatarLocalPath);
+    // console.log("Localpath of avatar ::", avatarLocalPath);
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avtar is required");
@@ -88,8 +88,8 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         fullname,
-        avatar,
-        coverImage: coverImage || "",
+        avatar:avatar.url,
+        coverImage: coverImage.url || "",
     })
     
     const createdUser = await User.findById(user._id).select(
@@ -297,7 +297,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         req.user?._id,
         {
             $set: {
-                avatar,
+                avatar:avatar.url,
             },
         },
         {
