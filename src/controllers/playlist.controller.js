@@ -3,11 +3,13 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Playlist } from "../models/playlist.model.js";
 import mongoose from "mongoose";
-const createPlaylist = asyncHandler(async (req, res) => {
-    const { name, description } = req.body;
 
-    if (!name) {
-        throw new ApiError(400, "Name is required.");
+
+const createPlaylist = asyncHandler(async (req, res) => {
+    const { name, description, videoId } = req.body;
+
+    if (!name && !videoId) {
+        throw new ApiError(400, "All feilds are required.");
     }
 
     const playlist = await Playlist.create({
@@ -16,9 +18,16 @@ const createPlaylist = asyncHandler(async (req, res) => {
         owner: req.user?._id,
     });
 
-    console.log(playlist);
+    let convertedVideoId = Array.from(videoId.split(','))
 
-    return res.status(201).json(new ApiResponse(201,playlist,'Playlist created successfully.'));
+    convertedVideoId.map((id) => {
+        let newId = new mongoose.Types.ObjectId(id);
+        playlist.videos.push(newId);
+    });
+
+    await playlist.save();
+
+    return res.status(201).json(new ApiResponse(201, playlist, 'Playlist created successfully.'));
 });
 
 const addVideo = asyncHandler(async (req, res) => {
@@ -32,10 +41,17 @@ const addVideo = asyncHandler(async (req, res) => {
     console.log("Playlist found :: ", playlist);
 
     if (!playlist) {
-        throw new ApiError(400, "Invalid user request");
+        throw new ApiError(400, "Invalid user request. Please provide valid playlist");
     }
 
-    playlist.videos.push(videoId);
+    let convertedVideoId = Array.from(videoId.split(','))
+
+    convertedVideoId.map((id) => {
+        let newId = new mongoose.Types.ObjectId(id);
+        playlist.videos.push(newId);
+    })
+
+    // playlist.videos.push(convertedVideoId);
     await playlist.save();
 
     return res
@@ -59,10 +75,10 @@ const deleteVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid user request");
     }
 
-    playlist.videos = playlist.videos.filter((video) =>{
+    playlist.videos = playlist.videos.filter((video) => {
         return !video.equals(new mongoose.Types.ObjectId(videoId))
     }
-);
+    );
     await playlist.save();
 
     return res

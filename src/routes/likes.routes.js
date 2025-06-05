@@ -1,15 +1,13 @@
 import { Router } from "express";
 import {
-    addLikeToComment,
-    addLikeToTweet,
-    addLikeToVideo,
+    likeToggleToComment, likeToggleToTweet, likeToggleToVideo,
 } from "../controllers/likes.controller.js";
 import { varifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/video").post(varifyJWT, addLikeToVideo);
-router.route("/comment").post(varifyJWT, addLikeToComment);
-router.route("/tweet").post(varifyJWT, addLikeToTweet);
+router.route("/video").post(varifyJWT, likeToggleToVideo);
+router.route("/comment").post(varifyJWT, likeToggleToComment);
+router.route("/tweet").post(varifyJWT, likeToggleToTweet);
 
 export default router;

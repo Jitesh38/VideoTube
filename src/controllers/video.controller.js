@@ -5,6 +5,8 @@ import { Video } from "../models/video.model.js";
 import { deleteOnCloud, uploadOnCloud } from "../utils/fileUpload.js";
 import mongoose from "mongoose";
 
+
+// upload video 
 const uploadVideo = asyncHandler(async (req, res) => {
     const { title, description, isPublished } = req.body;
 
@@ -20,7 +22,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
     const thumbnailLocalPath = req.files?.thumbnail[0]?.path;
 
     if (!videoLocalPath && !thumbnailLocalPath) {
-        throw new ApiError(400, "Please upload video or thumbnail of video.");
+        throw new ApiError(400, "Please upload video or thumbnail of video");
     }
 
     const videoFile = await uploadOnCloud(videoLocalPath);
@@ -50,6 +52,7 @@ const uploadVideo = asyncHandler(async (req, res) => {
         );
 });
 
+// get all user uploaded videos
 const getUploadedVideo = asyncHandler(async (req, res) => {
     const videos = await Video.aggregate([
         {
@@ -70,6 +73,7 @@ const getUploadedVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, videos, "Videos fetched successfully."));
 });
 
+// user can update information of the video
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const { title, description, isPublished } = req.body;
@@ -107,6 +111,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, video, "Video updated successfully."));
 });
 
+// delete video
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 

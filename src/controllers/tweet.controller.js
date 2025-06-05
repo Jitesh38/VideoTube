@@ -24,4 +24,21 @@ const addTweet = asyncHandler(async (req, res) => {
         .json(new ApiResponse(201, tweet, "Tweet added successfully."));
 });
 
-export { addTweet };
+const deleteTweet = asyncHandler(async (req, res) => {
+    const { tweetId } = req.body;
+
+    if(!tweetId){
+        throw new ApiError(400,'Please provide tweet to delete')
+    }
+
+    const tweet = await Tweet.findByIdAndDelete(tweetId);
+
+    if(!tweet){
+        throw new ApiError(400,'Please provide appropriate tweet to delete')
+    }
+
+    return res.status(200).json(new ApiResponse(200,tweet,'Tweet deleted successfully'))
+
+})
+
+export { addTweet,deleteTweet };

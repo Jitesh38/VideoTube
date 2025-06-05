@@ -9,11 +9,11 @@ const letSubscribe = asyncHandler(async (req, res) => {
     const checkSubscribe = await Subscription.find({
         channel: channelId,
         subscriber: req.user._id,
-    })
+    });
 
     if (checkSubscribe.length !== 0) {
         console.log(checkSubscribe);
-        throw new ApiError(400, 'Already subscribed.')
+        throw new ApiError(400, "Already subscribed.");
     }
 
     const subscription = await Subscription.create({
@@ -39,6 +39,10 @@ const letUnSubscribe = asyncHandler(async (req, res) => {
         channel: channelId,
         subscriber: req.user,
     });
+
+    if (!subscription) {
+        throw new ApiError(404, "Subscription not found."); 
+    }
 
     const unsubscribe = await Subscription.findByIdAndDelete(subscription._id);
 
