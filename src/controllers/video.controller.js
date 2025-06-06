@@ -25,22 +25,26 @@ const uploadVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Please upload video or thumbnail of video");
     }
 
-    const videoFile = await uploadOnCloud(videoLocalPath);
-    const thumbnail = await uploadOnCloud(thumbnailLocalPath);
+    console.log(videoLocalPath,thumbnailLocalPath);
 
-    if (!videoFile && !thumbnail) {
-        throw new ApiError(401, "Error while uploading on cloud.");
-    }
+    // const videoFile = await uploadOnCloud(videoLocalPath);
+    // const thumbnail = await uploadOnCloud(thumbnailLocalPath);
 
-    console.log("This is video file :: ", videoFile);
+    // if (!videoFile && !thumbnail) {
+    //     throw new ApiError(401, "Error while uploading on cloud.");
+    // }
+
+    // console.log("This is video file :: ", videoFile);
 
     const video = await Video.create({
-        videoFile: videoFile.url,
-        thumbnail: thumbnail.url,
+        videoFile: videoLocalPath,
+        thumbnail: thumbnailLocalPath,
+        // videoFile: videoFile.url,
+        // thumbnail: thumbnail.url,
         title,
         description,
         isPublished,
-        duration: videoFile.duration,
+        duration: videoLocalPath?.duration || 50,
         owner: req.user,
     });
 
@@ -121,12 +125,18 @@ const deleteVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video is not found.");
     }
 
-    await deleteOnCloud(video.videoFile);
-    await deleteOnCloud(video.thumbnail);
+    // await deleteOnCloud(video.videoFile);
+    // await deleteOnCloud(video.thumbnail);
 
     return res
         .status(200)
         .json(new ApiResponse(200, video, "Video deleted successfully."));
 });
 
-export { uploadVideo, getUploadedVideo, updateVideo, deleteVideo };
+const getVideosToShow = ()=>{
+
+    // const videos = await Video.aggregate()
+
+}
+
+export { uploadVideo, getUploadedVideo, updateVideo, deleteVideo, getVideosToShow };

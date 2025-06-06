@@ -71,25 +71,27 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Cover image is required.");
     }
 
-    const avatar = await uploadOnCloud(avatarLocalPath);
-    const coverImage = await uploadOnCloud(coverimageLocalPath);
+    // const avatar = await uploadOnCloud(avatarLocalPath);
+    // const coverImage = await uploadOnCloud(coverimageLocalPath);
 
-    console.log("Cloud Url of avatar :: ", avatar);
+    // console.log("Cloud Url of avatar :: ", avatar);
 
-    if (!avatar) {
-        throw new ApiError(400, "Error while uploading on cloud");
-    }
-    if (!coverImage) {
-        throw new ApiError(400, "Error while uploading on cloud");
-    }
+    // if (!avatar) {
+    //     throw new ApiError(400, "Error while uploading on cloud");
+    // }
+    // if (!coverImage) {
+    //     throw new ApiError(400, "Error while uploading on cloud");
+    // }
 
     const user = await User.create({
         username,
         email,
         password,
         fullname,
-        avatar: avatar.url,
-        coverImage: coverImage.url || "",
+        avatar: avatarLocalPath,
+        coverImage: coverimageLocalPath || "",
+        // avatar: avatar.url,
+        // coverImage: coverImage.url || "",
     });
 
     const createdUser = await User.findById(user._id).select(
@@ -273,7 +275,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         );
 });
 
-// TODO: make same function for cover image also
 const updateUserAvatar = asyncHandler(async (req, res) => {
     // * Since there is only one file we dont have to use array
 
@@ -283,21 +284,21 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Please upload files properly.");
     }
 
-    // TODO: delete old picture from cloud
-    const avatar = await uploadOnCloud(avatarLocalPath);
+    // const avatar = await uploadOnCloud(avatarLocalPath);
 
-    if (!avatar) {
-        throw new ApiError(400, "Error while uploading on avatar.");
-    }
+    // if (!avatar) {
+    //     throw new ApiError(400, "Error while uploading on avatar.");
+    // }
 
     // delete previouse pic from the cloud.
-    await deleteOnCloud(req.user?.avatar);
+    // await deleteOnCloud(req.user?.avatar);
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url,
+                avatar: avatarLocalPath,
+                // avatar: avatar.url,
             },
         },
         {
@@ -387,6 +388,18 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         );
 });
 
+const updateWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.body;
+
+    const user = await User.findById(req.user?._id);
+    user.watchHistory.push(videoId);
+    await user.save();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Watch history updated successfully"));
+});
+
 const getWatchHistory = asyncHandler(async (req, res) => {
     // we get only string from mongodb , when we use _id
     // mongoose internally convert this id to objectId of mongodb internally
@@ -433,17 +446,22 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                 ],
             },
         },
+        // {
+        //     $addFields: {
+        //         totalWatchedVideos: {
+        //             $size: "$watchHistory",
+        //         },
+        //     },
+        // },
     ]);
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                user[0].watchHistory,
-                "Watch history fetched successfully."
-            )
-        );
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            user[0].watchHistory,
+            "Watch history fetched successfully."
+        )
+    );
 });
 
 export {
@@ -456,5 +474,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     getUserChannelProfile,
+    updateWatchHistory,
     getWatchHistory,
 };

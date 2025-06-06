@@ -9,6 +9,7 @@ import {
     updateAccountDetails,
     updateUserAvatar,
     getUserChannelProfile,
+    updateWatchHistory,
     getWatchHistory,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -48,5 +49,6 @@ router
 
 router.route("/c/:username").get(varifyJWT, getUserChannelProfile);
 router.route("/watch-history").get(varifyJWT, getWatchHistory);
+router.route("/watch-history").post(varifyJWT, updateWatchHistory);
 
 export default router;

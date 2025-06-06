@@ -5,6 +5,7 @@ import {
     getUploadedVideo,
     updateVideo,
     deleteVideo,
+    getVideosToShow
 } from "../controllers/video.controller.js";
 import { varifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -24,6 +25,8 @@ router.route("/upload").post(
     ]),
     uploadVideo
 );
+
+router.route("/feed").get(varifyJWT, getVideosToShow);
 
 router.route("/my-videos").get(varifyJWT, getUploadedVideo);
 
