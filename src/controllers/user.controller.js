@@ -92,7 +92,7 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImage: coverImage.url || "",
     });
 
-    const createdUser = await User.findById(user._id).select(
+    const createdUser  = await User.findById(user._id).select(
         "-password -refreshToken"
     );
 
@@ -100,10 +100,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Internal Server Error! try after some time!");
     }
 
-    return res.status(201).json(new ApiResponse(200, createdUser));
+    return res.status(201).json(new ApiResponse(201, createdUser));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { email, username, password } = req.body;
 
     console.log("Email in Login : ", email);
@@ -138,7 +139,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
+        secure: false,
     };
 
     return res
@@ -273,7 +274,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         );
 });
 
-// TODO: make same function for cover image also
 const updateUserAvatar = asyncHandler(async (req, res) => {
     // * Since there is only one file we dont have to use array
 
@@ -283,7 +283,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Please upload files properly.");
     }
 
-    // TODO: delete old picture from cloud
     const avatar = await uploadOnCloud(avatarLocalPath);
 
     if (!avatar) {
@@ -297,7 +296,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         req.user?._id,
         {
             $set: {
-                avatar: avatar.url,
+                avatar: avatarLocalPath,
+                // avatar: avatar.url,
             },
         },
         {
@@ -387,6 +387,18 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         );
 });
 
+const updateWatchHistory = asyncHandler(async (req, res) => {
+    const { videoId } = req.body;
+
+    const user = await User.findById(req.user?._id);
+    user.watchHistory.push(videoId);
+    await user.save();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Watch history updated successfully"));
+});
+
 const getWatchHistory = asyncHandler(async (req, res) => {
     // we get only string from mongodb , when we use _id
     // mongoose internally convert this id to objectId of mongodb internally
@@ -423,27 +435,32 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             ],
                         },
                     },
-                    {
-                        $addFields: {
-                            owner: {
-                                $first: "$owner",
-                            },
-                        },
-                    },
+                    // {
+                    //     $addFields: {
+                    //         owner: {
+                    //             $first: "$owner",
+                    //         },
+                    //     },
+                    // },
                 ],
+            },
+        },
+        {
+            $addFields: {
+                totalWatchedVideos: {
+                    $size: "$watchHistory",
+                },
             },
         },
     ]);
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                user[0].watchHistory,
-                "Watch history fetched successfully."
-            )
-        );
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            user[0].watchHistory,
+            "Watch history fetched successfully."
+        )
+    );
 });
 
 export {
@@ -456,5 +473,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     getUserChannelProfile,
+    updateWatchHistory,
     getWatchHistory,
 };

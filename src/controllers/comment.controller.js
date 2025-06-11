@@ -5,8 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 // Post request
 const addComment = asyncHandler(async (req, res) => {
-    // const { videoId } = req.params;
-    const { content , videoId } = req.body;
+    const { videoId } = req.params;
+    const { content  } = req.body;
 
     const comment = await Comment.create({
         content,
