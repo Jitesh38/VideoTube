@@ -25,8 +25,5 @@ import DB_NAME from './constants'
 
 connectDB()
     .then(() => app.listen(process.env.PORT || 8000))
-    .catch((err) => console.log(err));
-
-app.get("/", (req, res) => {
-    res.send("this is running");
-});
+    .catch((err) => console.log(err))
+    .then('server started successfully');

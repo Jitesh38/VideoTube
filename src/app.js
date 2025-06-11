@@ -1,12 +1,13 @@
 import express, { urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from 'path';
 
 const app = express();
 
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN,
+        origin: 'http://localhost:5173',
         credentials: true,
     })
 );
@@ -45,5 +46,12 @@ app.use("/api/like", likeRouter);
 
 import commentRouter from "./routes/comment.routes.js";
 app.use("/api/comment", commentRouter);
+
+
+app.get('/public/temp/:filename', (req, res) => {
+  const filePath = path.join('//public//temp//', req.params.filename);
+  res.setHeader('Content-Type', 'image/jpeg'); // ✅ Key line
+  res.sendFile(filePath, { root: '.' });
+});
 
 export default app;

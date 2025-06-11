@@ -71,30 +71,28 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Cover image is required.");
     }
 
-    // const avatar = await uploadOnCloud(avatarLocalPath);
-    // const coverImage = await uploadOnCloud(coverimageLocalPath);
+    const avatar = await uploadOnCloud(avatarLocalPath);
+    const coverImage = await uploadOnCloud(coverimageLocalPath);
 
-    // console.log("Cloud Url of avatar :: ", avatar);
+    console.log("Cloud Url of avatar :: ", avatar);
 
-    // if (!avatar) {
-    //     throw new ApiError(400, "Error while uploading on cloud");
-    // }
-    // if (!coverImage) {
-    //     throw new ApiError(400, "Error while uploading on cloud");
-    // }
+    if (!avatar) {
+        throw new ApiError(400, "Error while uploading on cloud");
+    }
+    if (!coverImage) {
+        throw new ApiError(400, "Error while uploading on cloud");
+    }
 
     const user = await User.create({
         username,
         email,
         password,
         fullname,
-        avatar: avatarLocalPath,
-        coverImage: coverimageLocalPath || "",
-        // avatar: avatar.url,
-        // coverImage: coverImage.url || "",
+        avatar: avatar.url,
+        coverImage: coverImage.url || "",
     });
 
-    const createdUser = await User.findById(user._id).select(
+    const createdUser  = await User.findById(user._id).select(
         "-password -refreshToken"
     );
 
@@ -102,10 +100,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Internal Server Error! try after some time!");
     }
 
-    return res.status(201).json(new ApiResponse(200, createdUser));
+    return res.status(201).json(new ApiResponse(201, createdUser));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { email, username, password } = req.body;
 
     console.log("Email in Login : ", email);
@@ -140,7 +139,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
+        secure: false,
     };
 
     return res
@@ -284,14 +283,14 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Please upload files properly.");
     }
 
-    // const avatar = await uploadOnCloud(avatarLocalPath);
+    const avatar = await uploadOnCloud(avatarLocalPath);
 
-    // if (!avatar) {
-    //     throw new ApiError(400, "Error while uploading on avatar.");
-    // }
+    if (!avatar) {
+        throw new ApiError(400, "Error while uploading on avatar.");
+    }
 
     // delete previouse pic from the cloud.
-    // await deleteOnCloud(req.user?.avatar);
+    await deleteOnCloud(req.user?.avatar);
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
@@ -436,23 +435,23 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             ],
                         },
                     },
-                    {
-                        $addFields: {
-                            owner: {
-                                $first: "$owner",
-                            },
-                        },
-                    },
+                    // {
+                    //     $addFields: {
+                    //         owner: {
+                    //             $first: "$owner",
+                    //         },
+                    //     },
+                    // },
                 ],
             },
         },
-        // {
-        //     $addFields: {
-        //         totalWatchedVideos: {
-        //             $size: "$watchHistory",
-        //         },
-        //     },
-        // },
+        {
+            $addFields: {
+                totalWatchedVideos: {
+                    $size: "$watchHistory",
+                },
+            },
+        },
     ]);
 
     return res.status(200).json(

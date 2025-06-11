@@ -37,6 +37,7 @@ const likeToggleToComment = asyncHandler(async (req, res) => {
 });
 
 const likeToggleToVideo = asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { videoId } = req.body;
 
     if (!videoId) {
@@ -50,20 +51,27 @@ const likeToggleToVideo = asyncHandler(async (req, res) => {
 
     if (like) {
         const unlike = await Likes.findByIdAndDelete(like._id);
+         const totalLike = await Likes.find({
+            video:videoId
+        })
         return res
             .status(200)
-            .json(new ApiResponse(200, unlike, "Unliked video successfully"));
+            .json(new ApiResponse(200, {likes:totalLike.length}, "Unliked video successfully"));
     } else {
         const like = await Likes.create({
             video: videoId,
             likedBy: req.user?._id,
         });
 
+        const totalLike = await Likes.find({
+            video:videoId
+        })
+
         console.log("Object created :: ", like);
 
         return res
             .status(201)
-            .json(new ApiResponse(201, like, "Video liked successfully"));
+            .json(new ApiResponse(201, {likes:totalLike.length}, "Video liked successfully"));
     }
 });
 const likeToggleToTweet = asyncHandler(async (req, res) => {
