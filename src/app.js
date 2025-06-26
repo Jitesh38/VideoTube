@@ -47,6 +47,10 @@ app.use("/api/like", likeRouter);
 import commentRouter from "./routes/comment.routes.js";
 app.use("/api/comment", commentRouter);
 
+// error handler middleware
+import errorHandler from "./middlewares/errorHandler.middleware.js";
+app.use(errorHandler);
+
 
 app.get('/public/temp/:filename', (req, res) => {
   const filePath = path.join('//public//temp//', req.params.filename);

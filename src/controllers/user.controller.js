@@ -5,6 +5,7 @@ import { User } from "../models/user.models.js";
 import { deleteOnCloud, uploadOnCloud } from "../utils/fileUpload.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Playlist } from "../models/playlist.model.js";
 
 const generateAndRefreshTokens = async (userId) => {
     try {
@@ -23,7 +24,7 @@ const generateAndRefreshTokens = async (userId) => {
     }
 };
 
-const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res,next) => {
     // get user details from frontend
     // validation - not empty
     // check if user already exist : username , email
@@ -35,8 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // check user creation
     // return res
 
-    console.log("Body of request :: ", req.body);
-
+    // console.log("Body of request :: ", req.body);
     const { username, email, fullname, password } = req.body;
 
     if (
@@ -52,11 +52,11 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 
     if (existedUser) {
-        console.log("Existed user from mongodb", existedUser);
-        throw new ApiError(409, "Username or email should be unique");
+        // console.log("Existed user from mongodb", existedUser);
+        throw new ApiError(400, "Invalid input", ["email is required"]);
     }
 
-    console.log("Request Files object :: ", req.files);
+    // console.log("Request Files object :: ", req.files);
 
     //now this file is available on local server
     const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -74,7 +74,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatar = await uploadOnCloud(avatarLocalPath);
     const coverImage = await uploadOnCloud(coverimageLocalPath);
 
-    console.log("Cloud Url of avatar :: ", avatar);
+    // console.log("Cloud Url of avatar :: ", avatar);
 
     if (!avatar) {
         throw new ApiError(400, "Error while uploading on cloud");
@@ -82,6 +82,13 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!coverImage) {
         throw new ApiError(400, "Error while uploading on cloud");
     }
+
+    await Playlist.create({
+        name: "Watch Later",
+        description: "Videos you want to watch later",
+        owner: user._id,
+        videos: [],
+    });
 
     const user = await User.create({
         username,
@@ -92,7 +99,7 @@ const registerUser = asyncHandler(async (req, res) => {
         coverImage: coverImage.url || "",
     });
 
-    const createdUser  = await User.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     );
 
@@ -100,7 +107,11 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Internal Server Error! try after some time!");
     }
 
-    return res.status(201).json(new ApiResponse(201, createdUser));
+    return res
+        .status(201)
+        .json(
+            new ApiResponse(201, createdUser, "User Registered successfully.")
+        );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -142,11 +153,30 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: false,
     };
 
+    const exists = await Playlist.findOne({
+        name: "Watch Later",
+        owner: user._id,
+    });
+    if (!exists) {
+        await Playlist.create({
+            name: "Watch Later",
+            description: "Default playlist for saved videos",
+            owner: user._id,
+            videos: [],
+        });
+    }
+
     return res
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
-        .json(new ApiResponse(200, { accessToken, refreshToken }));
+        .json(
+            new ApiResponse(
+                200,
+                { accessToken, refreshToken },
+                "Login successfull."
+            )
+        );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -170,7 +200,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, user, "User logout successfully."));
+        .json(new ApiResponse(200, {}, "User logout successfully."));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -236,11 +266,32 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
 
-    return res.status(200).json(new ApiResponse(200, ""));
+    return res
+        .status(201)
+        .json(new ApiResponse(201, {}, "Password changed successfully"));
 });
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-    return res.status(200).json(new ApiResponse(200, req.user));
+    const { accessToken, refreshToken } = await generateAndRefreshTokens(
+        req.user?._id
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: false,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                { accessToken, refreshToken },
+                "Current user fetched successfully."
+            )
+        );
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -289,15 +340,19 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Error while uploading on avatar.");
     }
 
-    // delete previouse pic from the cloud.
-    await deleteOnCloud(req.user?.avatar);
+    try {
+        // delete previouse pic from the cloud.
+        let msg = await deleteOnCloud(req.user?.avatar);
+        console.log(msg);
+    } catch (error) {
+        console.log(error);
+    }
 
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
-                avatar: avatarLocalPath,
-                // avatar: avatar.url,
+                avatar: avatar.url,
             },
         },
         {
@@ -340,6 +395,14 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             },
         },
         {
+            $lookup: {
+                from: "videos",
+                localField: "_id",
+                foreignField: "owner",
+                as: "videos",
+            },
+        },
+        {
             $addFields: {
                 subscribersCount: {
                     // Use $ sign for fields
@@ -367,6 +430,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 subscribersCount: 1,
                 channelsSubscribedToCount: 1,
                 isSubscribed: 1,
+                videos: 1,
+                watchHistory: 1,
             },
         },
     ]);
@@ -454,13 +519,15 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         },
     ]);
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            user[0].watchHistory,
-            "Watch history fetched successfully."
-        )
-    );
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user[0].watchHistory,
+                "Watch history fetched successfully."
+            )
+        );
 });
 
 export {

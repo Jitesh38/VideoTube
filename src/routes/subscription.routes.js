@@ -7,7 +7,8 @@ import { varifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.route("/subscribe").post(varifyJWT, letSubscribe);
-router.route("/unsubscribe").delete(varifyJWT, letUnSubscribe);
+router.route("/")
+    .post(varifyJWT, letSubscribe)
+    .delete(varifyJWT, letUnSubscribe);
 
 export default router;

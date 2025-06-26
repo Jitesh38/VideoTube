@@ -8,6 +8,7 @@ import { User } from "../models/user.models.js";
 
 // upload video
 const uploadVideo = asyncHandler(async (req, res) => {
+    console.log(req.body);
     const { title, description, isPublished } = req.body;
 
     if (
@@ -48,31 +49,10 @@ const uploadVideo = asyncHandler(async (req, res) => {
 
     const createdVideo = await Video.findById(video._id);
     return res
-        .status(200)
+        .status(201)
         .json(
-            new ApiResponse(200, createdVideo, "Video uploaded successfully.")
+            new ApiResponse(201, createdVideo, "Video uploaded successfully.")
         );
-});
-
-// get all user uploaded videos
-const getUploadedVideo = asyncHandler(async (req, res) => {
-    const videos = await Video.aggregate([
-        {
-            $match: {
-                owner: new mongoose.Types.ObjectId(req.user?.id),
-            },
-        },
-    ]);
-
-    console.log("Videos of the user :", videos);
-
-    if (!videos) {
-        throw new ApiError(400, "Please upload videos first");
-    }
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, videos, "Videos fetched successfully."));
 });
 
 // user can update information of the video
@@ -128,7 +108,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(new ApiResponse(200, video, "Video deleted successfully."));
+        .json(new ApiResponse(200, {videoId}, "Video deleted successfully."));
 });
 
 const getVideoToShow = asyncHandler(async (req, res) => {
@@ -149,6 +129,7 @@ const getVideoToShow = asyncHandler(async (req, res) => {
                 pipeline: [
                     {
                         $project: {
+                            username: 1,
                             fullname: 1,
                             _id: 1,
                             avatar: 1,
@@ -157,13 +138,7 @@ const getVideoToShow = asyncHandler(async (req, res) => {
                 ],
             },
         },
-        {
-            $addFields: {
-                owner: {
-                    $first: "$owner",
-                },
-            },
-        },
+
         {
             $lookup: {
                 from: "likes",
@@ -190,7 +165,7 @@ const getVideoToShow = asyncHandler(async (req, res) => {
                                     $project: {
                                         fullname: 1,
                                         _id: 1,
-                                        avatar: 1
+                                        avatar: 1,
                                     },
                                 },
                             ],
@@ -209,9 +184,9 @@ const getVideoToShow = asyncHandler(async (req, res) => {
                             likes: {
                                 $size: "$likes",
                             },
-                            owner:{
-                                $first:'$owner'
-                            }
+                            owner: {
+                                $first: "$owner",
+                            },
                         },
                     },
                 ],
@@ -225,6 +200,16 @@ const getVideoToShow = asyncHandler(async (req, res) => {
                 totalComments: {
                     $size: "$comments",
                 },
+                owner: {
+                    $first: "$owner",
+                },
+                isOwner:{
+                    $cond:{
+                        if:{$in:[req.user?._id,"$owner._id"]},
+                        then:true,
+                        else:false
+                    }
+                }
             },
         },
         {
@@ -242,8 +227,8 @@ const getVideoToShow = asyncHandler(async (req, res) => {
 
     // add this video to user's watch history
     const user = await User.findById(req.user?._id);
-    if(!user.watchHistory.includes(videoId)){
-        user.watchHistory.push(videoId)
+    if (!user.watchHistory.includes(videoId)) {
+        user.watchHistory.push(videoId);
     }
     await user.save();
 
@@ -298,7 +283,6 @@ const getMyFeed = asyncHandler(async (req, res) => {
 
 export {
     uploadVideo,
-    getUploadedVideo,
     updateVideo,
     deleteVideo,
     getVideoToShow,

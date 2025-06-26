@@ -4,104 +4,99 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const likeToggleToComment = asyncHandler(async (req, res) => {
-    const { commentId } = req.body;
+    const { id } = req.body;
 
-    if (!commentId) {
+    if (!id) {
         throw new ApiError(400, "Please provide comment to like");
     }
 
     const like = await Likes.findOne({
-        comment: commentId,
+        comment: id,
         likedBy: req.user?._id,
     });
-
+    let msg;
     if (like) {
-        const unlike = await Likes.findByIdAndDelete(like._id);
-        return res
-            .status(200)
-            .json(
-                new ApiResponse(200, unlike, "Unliked comment successfully")
-            );
+        await Likes.findByIdAndDelete(like._id);
+        msg = "Unliked successfully";
     } else {
-        const like = await Likes.create({
-            comment: commentId,
+        await Likes.create({
+            comment: id,
             likedBy: req.user?._id,
         });
-
-        console.log("Object created :: ", like);
-
-        return res
-            .status(201)
-            .json(new ApiResponse(201, like, "Comment liked successfully"));
+        msg = "Liked successfully";
     }
+    const totalLike = await Likes.find({
+        comment: id,
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { likes: totalLike.length }, msg));
 });
 
 const likeToggleToVideo = asyncHandler(async (req, res) => {
     console.log(req.body);
-    const { videoId } = req.body;
+    const { id } = req.body;
 
-    if (!videoId) {
+    if (!id) {
         throw new ApiError(400, "Please provide video to like");
     }
 
     const like = await Likes.findOne({
-        video: videoId,
+        video: id,
         likedBy: req.user?._id,
     });
 
+    let msg;
+
     if (like) {
-        const unlike = await Likes.findByIdAndDelete(like._id);
-         const totalLike = await Likes.find({
-            video:videoId
-        })
-        return res
-            .status(200)
-            .json(new ApiResponse(200, {likes:totalLike.length}, "Unliked video successfully"));
+        await Likes.findByIdAndDelete(like._id);
+        msg = "Unliked successfully";
     } else {
-        const like = await Likes.create({
-            video: videoId,
+        await Likes.create({
+            video: id,
             likedBy: req.user?._id,
         });
-
-        const totalLike = await Likes.find({
-            video:videoId
-        })
-
-        console.log("Object created :: ", like);
-
-        return res
-            .status(201)
-            .json(new ApiResponse(201, {likes:totalLike.length}, "Video liked successfully"));
+        msg = "Liked successfully";
     }
-});
-const likeToggleToTweet = asyncHandler(async (req, res) => {
-    const { tweetId } = req.body;
 
-    if (!tweetId) {
+    const totalLike = await Likes.find({
+        video: id,
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { likes: totalLike.length }, msg));
+});
+
+const likeToggleToTweet = asyncHandler(async (req, res) => {
+    const { id } = req.body;
+
+    if (!id) {
         throw new ApiError(400, "Please provide tweet to like");
     }
 
     const like = await Likes.findOne({
-        tweet: tweetId,
+        tweet: id,
         likedBy: req.user?._id,
     });
+    let msg;
     if (like) {
-        const unlike = await Likes.findByIdAndDelete(like._id);
-        return res
-            .status(200)
-            .json(new ApiResponse(200, unlike, "Unliked tweet successfully."));
+        await Likes.findByIdAndDelete(like._id);
+        msg = "Unliked successfully";
     } else {
-        const like = await Likes.create({
-            tweet: tweetId,
+        await Likes.create({
+            tweet: id,
             likedBy: req.user?._id,
         });
-
-        console.log("Object created :: ", like);
-
-        return res
-            .status(201)
-            .json(new ApiResponse(201, like, "Tweet liked successfully"));
+        msg = "Liked successfully";
     }
+    const totalLike = await Likes.find({
+        tweet: id,
+    });
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { likes: totalLike.length }, msg));
 });
 
 export { likeToggleToComment, likeToggleToTweet, likeToggleToVideo };

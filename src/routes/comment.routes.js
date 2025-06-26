@@ -7,7 +7,7 @@ import {
 
 const router = Router();
 
-router.route("/add/:videoId").post(varifyJWT, addComment);
+router.route("/add/:id").post(varifyJWT, addComment);
 router.route("/delete").delete(varifyJWT, deleteComment);
 
 export default router;
