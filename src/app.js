@@ -2,6 +2,7 @@ import express, { urlencoded } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from 'path';
+import rateLimit from "express-rate-limit";
 
 const app = express();
 
@@ -18,11 +19,16 @@ app.use(express.json({ limit: "16kb" }));
 // for accepting response from url
 app.use(urlencoded({ extended: true, limit: "16kb" }));
 
-// for static file
-app.use(express.static("public"));
-
 // for cookies crud
 app.use(cookieParser());
+
+//rate limiting function for 1 hr
+const limiter = rateLimit({
+  max:100,
+  windowMs:60*60*100,
+  message:'Too many request from this ip, Please try again in a hour.'
+})
+app.use('/api',limiter);
 
 //routes declaration
 
@@ -50,12 +56,5 @@ app.use("/api/comment", commentRouter);
 // error handler middleware
 import errorHandler from "./middlewares/errorHandler.middleware.js";
 app.use(errorHandler);
-
-
-app.get('/public/temp/:filename', (req, res) => {
-  const filePath = path.join('//public//temp//', req.params.filename);
-  res.setHeader('Content-Type', 'image/jpeg'); // ✅ Key line
-  res.sendFile(filePath, { root: '.' });
-});
 
 export default app;
