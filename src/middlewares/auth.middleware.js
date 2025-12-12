@@ -5,9 +5,6 @@ import { User } from "../models/user.models.js";
 
 // we can replace res with _ , if it is not used
 export const varifyJWT = asyncHandler(async (req, res, next) => {
-    if (req.body) {
-        console.log('Body in auth middleware :: ', req.body);
-    }
     try {
         const token =
             req.cookies?.accessToken ||

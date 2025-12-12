@@ -29,6 +29,9 @@ const limiter = rateLimit({
   message:'Too many request from this ip, Please try again in a hour.'
 })
 app.use('/api',limiter);
+app.use('/api',(req,res)=>{
+  console.log(req);
+})
 
 //routes declaration
 

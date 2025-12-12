@@ -22,8 +22,3 @@ class ApiError extends Error {
 }
 
 export { ApiError };
-
-// Creating an instance for a 404 Not Found error
-// import { ApiError } from './utils/ApiError.js';
-// const error = new ApiError(404, "Resource not found", ["Invalid ID provided"]);
-// console.error(error);

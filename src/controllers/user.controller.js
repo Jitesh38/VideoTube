@@ -24,7 +24,7 @@ const generateAndRefreshTokens = async (userId) => {
     }
 };
 
-const registerUser = asyncHandler(async (req, res,next) => {
+const registerUser = asyncHandler(async (req, res, next) => {
     // get user details from frontend
     // validation - not empty
     // check if user already exist : username , email
@@ -56,13 +56,13 @@ const registerUser = asyncHandler(async (req, res,next) => {
         throw new ApiError(400, "Invalid input", ["email is required"]);
     }
 
-    // console.log("Request Files object :: ", req.files);
+    console.log("Request Files object :: ", req.files);
 
-    //now this file is available on local server
+    // now this file is available on local server
     const avatarLocalPath = req.files?.avatar[0]?.path;
     const coverimageLocalPath = req.files?.coverImage[0]?.path;
 
-    // console.log("Localpath of avatar ::", avatarLocalPath);
+    console.log("Localpath of avatar ::", avatarLocalPath);
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avtar is required");
@@ -71,10 +71,12 @@ const registerUser = asyncHandler(async (req, res,next) => {
         throw new ApiError(400, "Cover image is required.");
     }
 
+    // const avatar = 'ABC'
+    // const coverImage = 'ABC'
     const avatar = await uploadOnCloud(avatarLocalPath);
     const coverImage = await uploadOnCloud(coverimageLocalPath);
 
-    // console.log("Cloud Url of avatar :: ", avatar);
+    console.log("Cloud Url of avatar :: ", avatar);
 
     if (!avatar) {
         throw new ApiError(400, "Error while uploading on cloud");
@@ -83,13 +85,6 @@ const registerUser = asyncHandler(async (req, res,next) => {
         throw new ApiError(400, "Error while uploading on cloud");
     }
 
-    await Playlist.create({
-        name: "Watch Later",
-        description: "Videos you want to watch later",
-        owner: user._id,
-        videos: [],
-    });
-
     const user = await User.create({
         username,
         email,
@@ -97,6 +92,13 @@ const registerUser = asyncHandler(async (req, res,next) => {
         fullname,
         avatar: avatar.url,
         coverImage: coverImage.url || "",
+    });
+
+    await Playlist.create({
+        name: "Watch Later",
+        description: "Videos you want to watch later",
+        owner: user._id,
+        videos: [],
     });
 
     const createdUser = await User.findById(user._id).select(
@@ -153,18 +155,18 @@ const loginUser = asyncHandler(async (req, res) => {
         secure: false,
     };
 
-    const exists = await Playlist.findOne({
-        name: "Watch Later",
-        owner: user._id,
-    });
-    if (!exists) {
-        await Playlist.create({
-            name: "Watch Later",
-            description: "Default playlist for saved videos",
-            owner: user._id,
-            videos: [],
-        });
-    }
+    // const exists = await Playlist.findOne({
+    //     name: "Watch Later",
+    //     owner: user._id,
+    // });
+    // if (!exists) {
+    //     await Playlist.create({
+    //         name: "Watch Later",
+    //         description: "Default playlist for saved videos",
+    //         owner: user._id,
+    //         videos: [],
+    //     });
+    // }
 
     return res
         .status(200)
@@ -288,7 +290,8 @@ const getCurrentUser = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(
                 200,
-                { accessToken, refreshToken },
+                // { accessToken, refreshToken},
+                req.user,
                 "Current user fetched successfully."
             )
         );
